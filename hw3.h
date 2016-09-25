@@ -17,8 +17,11 @@ int boids_num = BOIDS_NUM;
 GLfloat boid_vertices[4][3];
 
 void init();
+void draw();
+void framebuffer_size_callback(GLFWwindow *w, int width, int height);
 void reshape(GLFWwindow *w, int width, int height);
 void draw_boid();
 void draw_wireframe_boid();
-
-#endif /* hw4_h */
+void draw_cube();
+void draw_wireframe_cube();
+#endif /* hw3_h */
