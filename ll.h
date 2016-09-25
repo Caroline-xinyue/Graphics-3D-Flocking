@@ -11,13 +11,13 @@ typedef enum {FALSE, TRUE} bool;
 #define COHESION_WEIGHT 0.5
 #define SEPARATION_WEIGHT 0.5
 
-struct Vector {
+typedef struct Vector {
     float x;
     float y;
     float z;
 } Vector;
 
-struct Boid {
+typedef struct Boid {
     Vector location;
     Vector velocity;
 } Boid;

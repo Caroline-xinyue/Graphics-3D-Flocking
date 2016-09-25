@@ -7,13 +7,6 @@
 #include <GLFW/glfw3.h>
 #endif
 #include "hw3.h"
-//#include "ll.h"
-
-//Boid* boids;
-float boid_angle;
-float boid_speed;
-
-GLfloat boid_vertices[4][3];
 
 GLfloat boid_colors[][3] = {
     {1.0, 1.0, 1.0},
@@ -37,20 +30,21 @@ GLubyte boid_wireframe_indices[12] = {
 };
 
 void init_boid_vertices() {
-    /*
+    
     GLfloat boid_temp_vertices[][3]= {
         {-1, 1, -BOID_RADIUS},
         {-1, 1, BOID_RADIUS},
         {-1 + sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0},
         {-1 - sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0}
     };
-    */
+    /*
     GLfloat boid_temp_vertices[][3]= {
         {0, 0, -BOID_RADIUS},
         {0, 0, BOID_RADIUS},
         {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0},
         {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0}
     };
+    */
     
     for(int i = 0; i < 4; i++) {
         for(int j = 0; j < 3; j++) {
@@ -59,9 +53,9 @@ void init_boid_vertices() {
     }
 }
 
-
 int main(int argc, char **argv) {
     GLFWwindow* window;
+    float angle = 0.0;
     
     // Initialize the library
     if (!glfwInit()) {
@@ -69,7 +63,7 @@ int main(int argc, char **argv) {
     }
     
     // Create a window and its OpenGL context
-    window = glfwCreateWindow(250, 250, "3D Flocking", NULL, NULL);
+    window = glfwCreateWindow(1000, 1000, "3D Flocking", NULL, NULL);
     if(!window) {
         glfwTerminate();
         exit(EXIT_FAILURE);
@@ -89,8 +83,12 @@ int main(int argc, char **argv) {
         glClearDepth(1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
-        //gluLookAt(2 * sin(angle), 2, 2 * cos(angle), 0, 0, 0, 0, 1, 0);
+        //gluLookAt(0, 0, 10, 0, 0, 0, 0, 1, 0);
+        gluLookAt(10 * sin(angle), 10, 10 * cos(angle), 0, 0, 0, 0, 1, 0);
+        angle += 0.02;
+        if(angle >= 360.0) {
+            angle = 0.0;
+        }
         draw_boid();
         draw_wireframe_boid();
         glfwSwapBuffers(window);
@@ -103,7 +101,7 @@ int main(int argc, char **argv) {
 }
 
 void init() {
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.0, 0.0, 1.0, 1.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(60, 1, 1.5, 20);
@@ -134,6 +132,7 @@ void draw_wireframe_boid() {
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, boid_vertices);
     glColor3f(1.0, 1.0, 1.0);
+    //for(int i = 0; i < )
     glDrawElements(GL_LINES, 12, GL_UNSIGNED_BYTE, boid_wireframe_indices);
     glDisableClientState(GL_VERTEX_ARRAY);
 }

@@ -2,12 +2,19 @@
 #define hw3_h
 
 #include <stdio.h>
-//#include <ll.h>
 #include <math.h>
+#include "ll.h"
 
-#define BOIDS_NUM 10
-#define BOID_RADIUS 5
+#define BOIDS_NUM 2
+#define BOID_RADIUS 1
 // TODO(tluan): don't go below 0
+
+
+Boid* boids;
+float boid_angle;
+float boid_speed;
+int boids_num = BOIDS_NUM;
+GLfloat boid_vertices[4][3];
 
 void init();
 void reshape(GLFWwindow *w, int width, int height);
