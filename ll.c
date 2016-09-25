@@ -56,7 +56,7 @@ Vector cohesion(Boid boid) {
         return vector;
     }
 }
-
+//test
 Vector separation(Boid boid) {
     Vector vector;
     vector.x = 0.0;
