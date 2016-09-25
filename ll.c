@@ -1,6 +1,8 @@
 #include "ll.h"
 #include "math.h"
 
+
+
 void update_velocity(Boid boid) {
     Vector alignment = alignment(boid);
     Vector cohesion = cohesion(boid);
@@ -8,7 +10,7 @@ void update_velocity(Boid boid) {
     boid.velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT;
     boid.velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT;
     boid.velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT;
-    normalize(boid.velocity);
+    boid.velocity = normalize(boid.velocity);
 }
 
 Vector alignment(Boid boid) {
@@ -33,6 +35,15 @@ Vector alignment(Boid boid) {
         return vector;
     }
 }
+
+
+Vector trans_update(){
+
+    return add(boid.velocity,boid.location);
+}
+
+
+
 
 Vector cohesion(Boid boid) {
     Vector vector;
@@ -87,6 +98,7 @@ Vector normalize(Vector vector) {
     normalized_vector.x = vector.x / length;
     normalized_vector.y = vector.y / length;
     normalized_vector.z = vector.z / length;
+    return normalized_vector;
 }
 
 Vector add_vector(Vector vec1, Vector vec2) {
