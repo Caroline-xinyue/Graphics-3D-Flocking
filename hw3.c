@@ -9,14 +9,14 @@
 #include "hw3.h"
 
 GLfloat cube_vertices[][3] = {
-    {-0.5, 0.5, 0.5},
-    {0.5, 0.5, 0.5},
-    {0.5, -0.5, 0.5},
-    {-0.5, -0.5, 0.5},
-    {-0.5, -0.5, -0.5},
-    {0.5, -0.5, -0.5},
-    {0.5, 0.5, -0.5},
-    {-0.5, 0.5, -0.5}
+    {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
+    {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
+    {CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
+    {-CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
+    {-CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0},
+    {CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0},
+    {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0},
+    {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0}
 };
 
 GLubyte cube_indices[24] = {

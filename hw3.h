@@ -7,6 +7,7 @@
 
 #define BOIDS_NUM 2
 #define BOID_RADIUS 1
+#define CUBE_SIZE 0.2
 // TODO(tluan): don't go below 0
 
 
