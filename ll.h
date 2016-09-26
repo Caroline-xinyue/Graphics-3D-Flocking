@@ -6,10 +6,10 @@
 typedef enum {FALSE, TRUE} bool;
 #define VERTICAL_JUSTIFICATION 1
 #define WEIGHTS_UPPER_BOUND 2
-#define NEIGHBOR_RADIUS 200
-#define ALIGNMENT_WEIGHT 0.5
+#define NEIGHBOR_RADIUS 0.5
+#define ALIGNMENT_WEIGHT 0.4
 #define COHESION_WEIGHT 0.5
-#define SEPARATION_WEIGHT 0.5
+#define SEPARATION_WEIGHT 0.1
 
 typedef struct Vector {
     float x;
@@ -22,14 +22,9 @@ typedef struct Boid {
     Vector velocity;
 } Boid;
 
-Vector add_vector(Vector, Vector);
-Vector mult_value(Vector, float);
-void normalize(Vector);
-int distance(Vector, Vector);
-
-void update_velocity();
-Vector alignment(Boid);
-Vector cohesion(Boid);
-Vector separation(Boid);
+Vector add_vec_vec(Vector, Vector);
+Vector mult_vec_val(Vector, float);
+Vector normalize_vec(Vector);
+float distance_vec_vec(Vector, Vector);
 
 #endif /* ll_h */

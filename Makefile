@@ -5,11 +5,20 @@
 # accordingly
 
 ifeq ($(shell uname -s), Darwin)
-LDFLAGS=-L/opt/ports/lib -framework OpenGL -lglfw -lGLEW -lm
+LDFLAGS = -L/opt/ports/lib -framework OpenGL -lglfw -lGLEW -lm
 else
-LDFLAGS=-lX11 -lGL -lGLU -lglfw -lGLEW -lm
+LDFLAGS = -lX11 -lGL -lGLU -lglfw -lGLEW -lm
 endif
 CC = gcc
-CFLAGS=-g -Wall -I/opt/ports/include
-all: $@
-$@: $a.
+CFLAGS = -g -Wall -I/opt/ports/include
+DEPS = ll.h hw3.h
+OBJ = ll.o hw3.o
+
+ll.o: ll.c $(DEPS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+hw3.o: hw3.c $(DEPS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+hw3: $(OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+clean:
+	rm *.o hw3
