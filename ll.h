@@ -6,10 +6,10 @@
 typedef enum {FALSE, TRUE} bool;
 #define VERTICAL_JUSTIFICATION 1
 #define WEIGHTS_UPPER_BOUND 2
-#define NEIGHBOR_RADIUS 0.5
-#define ALIGNMENT_WEIGHT 0.4
-#define COHESION_WEIGHT 0.5
-#define SEPARATION_WEIGHT 0.1
+#define NEIGHBOR_RADIUS 100000
+#define ALIGNMENT_WEIGHT 0
+#define COHESION_WEIGHT 0
+#define SEPARATION_WEIGHT 1000
 
 typedef struct Vector {
     float x;
