@@ -87,32 +87,9 @@ GLfloat boid_colors[][3] = {
 
 Vector cube_location; // move cube with keyboard
 
-void init_boid_vertices() {
-    /*
-    GLfloat boid_temp_vertices[][3]= {
-        {-1, 1, -BOID_RADIUS},
-        {-1, 1, BOID_RADIUS},
-        {-1 + sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0},
-        {-1 - sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0}
-    };
-    */
-    GLfloat boid_temp_vertices[][3] = {
-        {0, 0, -BOID_RADIUS},
-        {0, 0, BOID_RADIUS},
-        {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0},
-        {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0}
-    };
-    
-    for(int i = 0; i < 4; i++) {
-        for(int j = 0; j < 3; j++) {
-            boid_vertices[i][j] = boid_temp_vertices[i][j];
-        }
-    }
-}
-
 int main(int argc, char **argv) {
     GLFWwindow* window;
-    GLfloat angle = 0.0;
+    //GLfloat angle = 0.0;
     
     // Initializes random number generator
     srand(time(NULL));
@@ -189,6 +166,10 @@ void init() {
     resize();
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_FLAT);
+    boids = malloc(sizeof(Boid*) * ARR_SIZE);
+    for(int i = 0; i < BOIDS_NUM; i++) {
+        boids[i] = NULL;
+    }
     init_boids();
     init_boid_vertices();
     init_grid_vertices();
@@ -215,12 +196,19 @@ void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
   case GLFW_KEY_RIGHT:
     cube_location.x = cube_location.x + CUBE_VELOCITY;
     break;
+  case 61:
+    add_boid();
+    break;
+  case 45:
+    delete_boid();
+    break;
   case 's':
   case 'S':
     break;
   case 'q':
   case 'Q':
     glfwSetWindowShouldClose(w, GL_TRUE);
+    clear_boids();
     break;
   default:
     break;
@@ -231,6 +219,40 @@ void cursor(GLFWwindow* window, double xpos, double ypos) {
 }
 
 void mouse(GLFWwindow* window, int button, int action, int mods) {
+}
+
+void init_boid_vertices() {
+    /*
+     GLfloat boid_temp_vertices[][3]= {
+     {-1, 1, -BOID_RADIUS},
+     {-1, 1, BOID_RADIUS},
+     {-1 + sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0},
+     {-1 - sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0}
+     };
+     */
+    GLfloat boid_temp_vertices[][3] = {
+        {0, 0, -BOID_RADIUS},
+        {0, 0, BOID_RADIUS},
+        {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0},
+        {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0}
+    };
+    
+    for(int i = 0; i < 4; i++) {
+        for(int j = 0; j < 3; j++) {
+            boid_vertices[i][j] = boid_temp_vertices[i][j];
+        }
+    }
+}
+
+void clear_boids() {
+    for(int i = 0; i < boids_num; i++) {
+        if(boids[i] != NULL) {
+            free(boids[i]);
+            boids[i] = NULL;
+        }
+    }
+    free(boids);
+    boids_num = 0;
 }
 
 void resize() {
@@ -246,27 +268,47 @@ void framebuffer_size_callback(GLFWwindow *w, int width, int height) {
 }
 
 void init_boids() {
-    boids = malloc(sizeof(Boid*) * ARR_SIZE);
-    Vector old_loc;
-    Vector loc;
-    Vector vel;
-    for(int i = 0; i < BOIDS_NUM; i++) {
-        old_loc.x = 0;
-        old_loc.y = 0;
-        old_loc.z = 0;
-        loc.x = randomGenerator();
-        loc.y = randomGenerator();
-        loc.z = randomGenerator();
-        vel.x = 20;
-        vel.y = 0;
-        vel.z = 20;
-        Boid* boid = make_boid(old_loc, loc, vel);
-        *(boids + i) = boid;
+    for(int i = 0; i < boids_num; i++) {
+        init_boid(i);
     }
 }
 
-Vector tendencyTo(Vector place, Vector boid){
-    return add_vec_vec(place, mult_vec_val(boid, -1));
+void init_boid(int num_boid) {
+    Vector old_loc;
+    Vector loc;
+    Vector vel;
+    old_loc.x = 0;
+    old_loc.y = 0;
+    old_loc.z = 0;
+    loc.x = randomGenerator();
+    loc.y = randomGenerator();
+    loc.z = randomGenerator();
+    vel.x = 20;
+    vel.y = 0;
+    vel.z = 20;
+    Boid* boid = make_boid(old_loc, loc, vel);
+    *(boids + num_boid) = boid;
+}
+
+void add_boid() {
+    if(boids_num >= ARR_SIZE) {
+        boids = realloc(boids, 2 * ARR_SIZE);
+    }
+    init_boid(boids_num);
+    boids_num++;
+}
+
+void delete_boid() {
+    if(boids_num == 0) {
+        printf("No more boids to delete\n");
+        return;
+    }
+    if(boids_num <= ARR_SIZE / 2) {
+        boids = realloc(boids, 0.5 * ARR_SIZE);
+    }
+    free(boids[boids_num - 1]);
+    boids[boids_num - 1] = NULL;
+    boids_num--;
 }
 
 void init_grid_vertices() {
@@ -275,9 +317,6 @@ void init_grid_vertices() {
         grid_vertices[i][0] = GRID_TRANSLATEX + (i % (NUM_GRID_X + 1)) * GRID_SIZE;
         grid_vertices[i][1] = -FLOOR_HEIGHT;
         grid_vertices[i][2] = GRID_TRANSLATEZ + (i / (NUM_GRID_X + 1)) * GRID_SIZE;
-       // printf("grid_vertices[i][0]: %f\n", grid_vertices[i][0]);
-       // printf("grid_vertices[i][1]: %f\n", grid_vertices[i][1]);
-      //  printf("grid_vertices[i][2]: %f\n", grid_vertices[i][2]);
     }
 }
 
@@ -289,10 +328,6 @@ void init_grid_indices() {
             grid_indices[j + 1] = i + NUM_GRID_X + 1;
             grid_indices[j + 2] = i + NUM_GRID_X + 2;
             grid_indices[j + 3] = i + 1;
-          //  printf("grid_indices[i]: %d\n", grid_indices[j]);
-          //  printf("grid_indices[i + 1]: %d\n", grid_indices[j + 1]);
-         //   printf("grid_indices[i + 2]: %d\n", grid_indices[j + 2]);
-         //   printf("grid_indices[i + 3]: %d\n", grid_indices[j + 3]);
             j+=4;
         }
     }
@@ -357,8 +392,10 @@ void draw_boid() {
     glColorPointer(3, GL_FLOAT, 0, boid_colors);
     for(int i = 0; i < boids_num; i++) {
         glPushMatrix();
+        boids[i]->location = add_vec_vec(boids[i]->velocity, boids[i]->location);
         glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
+        //glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, boid_head_indices);
         glPopMatrix();
     }
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -373,7 +410,6 @@ void draw_wireframe_boid() {
     glVertexPointer(3, GL_FLOAT, 0, boid_vertices);
     glColor3f(1.0, 1.0, 1.0);
     for(int i = 0; i < boids_num; i++) {
-        boids[i]->location = add_vec_vec(boids[i]->velocity,boids[i]->location);
         glPushMatrix();
         glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
         glDrawElements(GL_LINES, 12, GL_UNSIGNED_BYTE, boid_wireframe_indices);
@@ -388,11 +424,11 @@ void update_velocity(Boid* boid) {
     Vector separation = update_separation(*boid);
     Vector tendency = tendencyTo(boid->location, cube_location);
 
-    boid->velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT - tendency.x * 20;
-    boid->velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT - tendency.y * 20;
-    boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * 20;
+    boid->velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT - tendency.x * TENDENCY_TO_GOAL_WEIGHT;
+    boid->velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT - tendency.y * TENDENCY_TO_GOAL_WEIGHT;
+    boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity = normalize_vec(boid->velocity);
-    boid->velocity = mult_vec_val(boid->velocity, 20);
+    boid->velocity = mult_vec_val(boid->velocity, BOID_VEL_FACTOR);
     printf("AFTER\n");
     printf("boid->velocity.x: %f\n", boid->velocity.x);
     printf("boid->velocity.y: %f\n", boid->velocity.y);
@@ -422,7 +458,6 @@ Vector update_alignment(Boid boid) {
         vector.x = vector.x - boid.velocity.x;
         vector.y = vector.y - boid.velocity.y;
         vector.z = vector.z - boid.velocity.z;
-       // normalize_vec(vector);
         return vector;
     }
 }
@@ -435,19 +470,18 @@ Vector update_cohesion(Boid boid) {
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
         if(distance_vec_vec(boid.location, boids[i]->location) < NEIGHBOR_RADIUS) {
-             vector.x =  vector.x +boids[i]->location.x;
-             vector.y =  vector.y +boids[i]->location.y;
-             vector.z =  vector.z +boids[i]->location.z;
+             vector.x =  vector.x + boids[i]->location.x;
+             vector.y =  vector.y + boids[i]->location.y;
+             vector.z =  vector.z + boids[i]->location.z;
             neighborCount++;
         }
     }
     if(neighborCount == 0) {
         return vector;
     } else {
-        vector.x = vector.x / (neighborCount) - boid.location.x;
-        vector.y = vector.y / (neighborCount) - boid.location.y;
-        vector.z = vector.z / (neighborCount) - boid.location.z;
-        //normalize_vec(vector);
+        vector.x = vector.x / neighborCount - boid.location.x;
+        vector.y = vector.y / neighborCount - boid.location.y;
+        vector.z = vector.z / neighborCount - boid.location.z;
         return vector;
     }
 }
@@ -459,10 +493,10 @@ Vector update_separation(Boid boid) {
     vector.z = 0.0;
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
-        if(distance_vec_vec(boid.location, boids[i]->location) < 500) {
+        if(distance_vec_vec(boid.location, boids[i]->location) < 2000) {
             vector.x = vector.x - (boids[i]->location.x - boid.location.x);
-             vector.y = vector.y - (boids[i]->location.y - boid.location.y);
-             vector.z = vector.z - (boids[i]->location.z - boid.location.z);
+            vector.y = vector.y - (boids[i]->location.y - boid.location.y);
+            vector.z = vector.z - (boids[i]->location.z - boid.location.z);
         }
     }
     if(neighborCount == 0) {
@@ -473,7 +507,10 @@ Vector update_separation(Boid boid) {
     }
 }
 
+Vector tendencyTo(Vector place, Vector boid){
+    return add_vec_vec(place, mult_vec_val(boid, -1));
+}
+
 GLfloat randomGenerator(){
     return (GLfloat)((rand() % 100) / 100.0);
 }
-
