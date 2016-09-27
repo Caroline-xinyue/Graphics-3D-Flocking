@@ -1,29 +1,30 @@
 #ifndef hw3_h
 #define hw3_h
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "time.h"
-
 #include "ll.h"
 
 #define WIDTH 800
 #define HEIGHT 800
+#define ARR_SIZE 10000
 #define GRID_TRANSLATEX -10000
 #define GRID_TRANSLATEZ -10000
 #define NUM_GRID_X 50
 #define NUM_GRID_Z 50
 #define GRID_SIZE 400
 #define BOIDS_NUM 100
-#define ARR_SIZE 10000
 #define BOID_RADIUS 200
-#define CUBE_SIZE 100
+#define CUBE_SIZE 250
+#define CUBE_VELOCITY 100
+#define FLOOR_HEIGHT 1000
 #define BLACK 0.9
-#define GRAY 0.7
 #define WHITE 0.5
 // TODO(tluan): boids and cube don't go below 0
 
-Boid* boids;
+Boid** boids;
 GLfloat boid_angle;
 GLfloat boid_speed;
 GLint grid_vertices_num = (NUM_GRID_X + 1) * (NUM_GRID_Z + 1);
@@ -40,6 +41,7 @@ void init_grid_vertices();
 void init_grid_indices();
 void init_grid_color();
 void init_boid_vertices();
+void init_cube_location();
 void draw();
 void framebuffer_size_callback(GLFWwindow *w, int width, int height);
 void draw_floor();

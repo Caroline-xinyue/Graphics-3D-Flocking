@@ -1,5 +1,4 @@
 #include "ll.h"
-#include "math.h"
 
 Vector normalize_vec(Vector vector) {
     Vector normalized_vector;
@@ -22,6 +21,26 @@ Vector normalize_vec(Vector vector) {
     printf("normalized_vector_z: %f\n", normalized_vector.z);
     */
     return normalized_vector;
+}
+
+Boid* make_boid(Vector old_loc, Vector loc, Vector vel) {
+    Boid* new;
+    if ( (new = (Boid*) malloc( sizeof(Boid) ) )!= NULL) {
+        new -> old_location.x = old_loc.x;
+        new -> old_location.y = old_loc.y;
+        new -> old_location.z = old_loc.z;
+        new -> location.x = loc.x;
+        new -> location.y = loc.y;
+        new -> location.z = loc.z;
+        new -> velocity.x = vel.x;
+        new -> velocity.y = vel.y;
+        new -> velocity.z = vel.z;
+    }
+    else {
+        printf("Out of memory!\n");
+        exit(0);
+    }
+    return new;
 }
 
 Vector add_vec_vec(Vector vec1, Vector vec2) {

@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <math.h>
 #ifdef __APPLE__
 #include <GLFW/glfw3.h>
 #include <GL/glu.h>
@@ -27,8 +25,6 @@ GLubyte cube_indices[24] = {
     7, 6, 5, 4,
     3, 4, 5, 2
 };
-Vector transCube;
-
 
 GLubyte cube_wireframe_indices[48] = {
     0, 3,
@@ -60,12 +56,12 @@ GLubyte cube_wireframe_indices[48] = {
 GLfloat cube_colors[][3] = {
     {1.0, 1.0, 1.0},
     {0.0, 1.0, 0.0},
-    {1.0, 1.0, 0.0},
+    {0.0, 0.0, 1.0},
     {1.0, 0.0, 1.0},
     {0.0, 1.0, 1.0},
     {0.0, 0.0, 0.0},
-    {1.0, 0.0, 0.0},
-    {0.0, 0.0, 1.0}
+    {1.0, 1.0, 0.0},
+    {1.0, 0.0, 0.0}
 };
 
 GLubyte boid_indices[6] = {
@@ -89,6 +85,8 @@ GLfloat boid_colors[][3] = {
     {0.0, 0.0, 1.0}
 };
 
+Vector cube_location; // move cube with keyboard
+
 void init_boid_vertices() {
     /*
     GLfloat boid_temp_vertices[][3]= {
@@ -98,7 +96,6 @@ void init_boid_vertices() {
         {-1 - sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0}
     };
     */
-
     GLfloat boid_temp_vertices[][3] = {
         {0, 0, -BOID_RADIUS},
         {0, 0, BOID_RADIUS},
@@ -160,13 +157,15 @@ int main(int argc, char **argv) {
         glClearDepth(1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        gluLookAt(0, 18000, 0, 0, 0, 0, 1, 0, 0);
+        gluLookAt(2000, 2000 , 2000, 0, 0, 0, 0, 0, -1);
         //gluLookAt(2000, 0, 18000, 0, 0, 0, 0, 1, 0);
-        //gluLookAt(2000 * sin(angle), 2000, 2000 * cos(angle), 0, 0, 0, 0, 1, 0);
+        /*
+        gluLookAt(2000 * sin(angle), 2000, 2000 * cos(angle), 0, 0, 0, 0, 1, 0);
         angle += 0.02;
         if(angle >= 360.0) {
             angle = 0.0;
         }
+         */
         draw();
         glfwSwapBuffers(window);
         
@@ -195,6 +194,7 @@ void init() {
     init_grid_vertices();
     init_grid_color();
     init_grid_indices();
+    init_cube_location();
 }
 
 void reshape(GLFWwindow *w, int width, int height) {
@@ -204,16 +204,16 @@ void reshape(GLFWwindow *w, int width, int height) {
 void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
   switch(key) {
   case GLFW_KEY_UP:
-    transCube.z = transCube.z + 100;
+    cube_location.z = cube_location.z + CUBE_VELOCITY;
     break;
   case GLFW_KEY_DOWN:
-    transCube.z = transCube.z - 100;
+    cube_location.z = cube_location.z - CUBE_VELOCITY;
     break;
   case GLFW_KEY_LEFT:
-    transCube.x = transCube.x - 100;
+    cube_location.x = cube_location.x - CUBE_VELOCITY;
     break;
   case GLFW_KEY_RIGHT:
-    transCube.x = transCube.x + 100;
+    cube_location.x = cube_location.x + CUBE_VELOCITY;
     break;
   case 's':
   case 'S':
@@ -246,57 +246,68 @@ void framebuffer_size_callback(GLFWwindow *w, int width, int height) {
 }
 
 void init_boids() {
-    boids = malloc(sizeof(Boid) * ARR_SIZE);
+    boids = malloc(sizeof(Boid*) * ARR_SIZE);
+    Vector old_loc;
+    Vector loc;
+    Vector vel;
     for(int i = 0; i < BOIDS_NUM; i++) {
-        boids[i].location.x = randomGenerator();
-        boids[i].location.y = randomGenerator();
-        boids[i].location.z = randomGenerator();
+        old_loc.x = 0;
+        old_loc.y = 0;
+        old_loc.z = 0;
+        loc.x = randomGenerator();
+        loc.y = randomGenerator();
+        loc.z = randomGenerator();
+        vel.x = 20;
+        vel.y = 0;
+        vel.z = 20;
+        Boid* boid = make_boid(old_loc, loc, vel);
+        *(boids + i) = boid;
     }
-    for(int i = 0; i < BOIDS_NUM; i++) {
-        boids[i].velocity.x = 20;
-        boids[i].velocity.y = 20;
-        boids[i].velocity.z = 0;
-    }
+}
+
+Vector tendencyTo(Vector place, Vector boid){
+    return add_vec_vec(place, mult_vec_val(boid, -1));
 }
 
 void init_grid_vertices() {
     for(int i = 0; i < grid_vertices_num; i++) {
+        printf("i: %d\n", i);
         grid_vertices[i][0] = GRID_TRANSLATEX + (i % (NUM_GRID_X + 1)) * GRID_SIZE;
-        grid_vertices[i][1] = 0;
+        grid_vertices[i][1] = -FLOOR_HEIGHT;
         grid_vertices[i][2] = GRID_TRANSLATEZ + (i / (NUM_GRID_X + 1)) * GRID_SIZE;
-        printf("grid_vertices[i][0]: %f\n", grid_vertices[i][0]);
-        printf("grid_vertices[i][1]: %f\n", grid_vertices[i][1]);
-        printf("grid_vertices[i][2]: %f\n", grid_vertices[i][2]);
+       // printf("grid_vertices[i][0]: %f\n", grid_vertices[i][0]);
+       // printf("grid_vertices[i][1]: %f\n", grid_vertices[i][1]);
+      //  printf("grid_vertices[i][2]: %f\n", grid_vertices[i][2]);
     }
 }
 
 void init_grid_indices() {
-    for(int i = 0; i < grid_indices_num; i++) {
-        //printf("i: %d\n", i);
-        if(i % 4 == 0 && i % NUM_GRID_X != 0) {
-            grid_indices[i] = i / 4;
-            grid_indices[i + 1] = grid_indices[i] + (NUM_GRID_X + 1);
-            grid_indices[i + 2] = grid_indices[i + 1] + 1;
-            grid_indices[i + 3] = grid_indices[i] + 1;
-             printf("grid_indices[i]: %d\n", grid_indices[i]);
-             printf("grid_indices[i + 1]: %d\n", grid_indices[i + 1]);
-             printf("grid_indices[i + 2]: %d\n", grid_indices[i + 2]);
-             printf("grid_indices[i + 3]: %d\n", grid_indices[i + 3]);
+    int j = 0;
+    for(int i = 0; i < grid_vertices_num; i++) {
+        if(i < grid_vertices_num - (NUM_GRID_X + 1) && (i - NUM_GRID_X) % (NUM_GRID_X + 1) != 0) {
+            grid_indices[j] = i;
+            grid_indices[j + 1] = i + NUM_GRID_X + 1;
+            grid_indices[j + 2] = i + NUM_GRID_X + 2;
+            grid_indices[j + 3] = i + 1;
+          //  printf("grid_indices[i]: %d\n", grid_indices[j]);
+          //  printf("grid_indices[i + 1]: %d\n", grid_indices[j + 1]);
+         //   printf("grid_indices[i + 2]: %d\n", grid_indices[j + 2]);
+         //   printf("grid_indices[i + 3]: %d\n", grid_indices[j + 3]);
+            j+=4;
         }
     }
 }
 
 void init_grid_color() {
     for(int i = 0; i < grid_vertices_num; i++) {
-        if(i % (GRID_SIZE + 1) == 0 || i >= (grid_vertices_num - GRID_SIZE)) {
-            grid_colors[i][0] = GRAY;
-            grid_colors[i][1] = GRAY;
-            grid_colors[i][2] = GRAY;
-        } else if(i % 2 == 0) {
+        printf("colori: %d", i);
+        if(i % 2 != 0) {
+            printf("BLACK\n");
             grid_colors[i][0] = BLACK;
             grid_colors[i][1] = BLACK;
             grid_colors[i][2] = BLACK;
         } else {
+            printf("WHITE\n");
             grid_colors[i][0] = WHITE;
             grid_colors[i][1] = WHITE;
             grid_colors[i][2] = WHITE;
@@ -304,10 +315,10 @@ void init_grid_color() {
     }
 }
 
-void init_cube_velocity(){
-    transCube.x = 0;
-    transCube.y = 0;
-    transCube.z = 0;
+void init_cube_location(){
+    cube_location.x = 0;
+    cube_location.y = 0;
+    cube_location.z = 0;
 }
 
 void draw_floor() {
@@ -325,14 +336,10 @@ void draw_cube() {
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, cube_vertices);
     glColorPointer(3, GL_FLOAT, 0, cube_colors);
-    glTranslatef(transCube.x,transCube.y,transCube.z);
+    glTranslatef(cube_location.x,cube_location.y,cube_location.z);
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_BYTE, cube_indices);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
-}
-
-GLfloat randomGenerator(){
-    return (GLfloat)((rand() % 100) / 100.0);
 }
 
 void draw_wireframe_cube() {
@@ -350,15 +357,15 @@ void draw_boid() {
     glColorPointer(3, GL_FLOAT, 0, boid_colors);
     for(int i = 0; i < boids_num; i++) {
         glPushMatrix();
-        printf("transx: %f\n", boids[i].location.x);
-        printf("transy %f\n", boids[i].location.y);
-        printf("transz: %f\n", boids[i].location.z);
-        glTranslatef(boids[i].location.x, boids[i].location.y, boids[i].location.z);
+        glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
         glPopMatrix();
     }
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
+    for(int i = 0; i < boids_num; i++) {
+        update_velocity(boids[i]);
+    }
 }
 
 void draw_wireframe_boid() {
@@ -366,40 +373,30 @@ void draw_wireframe_boid() {
     glVertexPointer(3, GL_FLOAT, 0, boid_vertices);
     glColor3f(1.0, 1.0, 1.0);
     for(int i = 0; i < boids_num; i++) {
-        printf("v: %f\n", boids[i].velocity.x);
-        printf("l: %f\n", boids[i].location.x);
-        boids[i].location = add_vec_vec(boids[i].velocity,boids[i].location);
-         printf("l2: %f\n", boids[i].location.x);
+        boids[i]->location = add_vec_vec(boids[i]->velocity,boids[i]->location);
         glPushMatrix();
-        glTranslatef(boids[i].location.x, boids[i].location.y, boids[i].location.z);
+        glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
         glDrawElements(GL_LINES, 12, GL_UNSIGNED_BYTE, boid_wireframe_indices);
         glPopMatrix();
-    }
-    for(int i = 0; i < boids_num; i++) {
-        update_velocity(boids[i]);
     }
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void update_velocity(Boid boid) {
-    Vector alignment = update_alignment(boid);
-    Vector cohesion = update_cohesion(boid);
-    Vector separation = update_separation(boid);
-    printf("alignment: %f\n", alignment.x);
-    printf("cohesion: %f\n", cohesion.x);
-    printf("separation: %f\n", separation.x);
-    boid.velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT;
-    boid.velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT;
-    boid.velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT;
-    printf("BEFORE\n");
-    printf("boid.velocity.x: %f\n", boid.velocity.x);
-    printf("boid.velocity.y: %f\n", boid.velocity.y);
-    printf("boid.velocity.z: %f\n", boid.velocity.z);
-    boid.velocity = normalize_vec(boid.velocity);
-   // printf("AFTER\n");
-   // printf("boid.velocity.x: %f\n", boid.velocity.x);
-   // printf("boid.velocity.y: %f\n", boid.velocity.y);
-   // printf("boid.velocity.z: %f\n", boid.velocity.z);
+void update_velocity(Boid* boid) {
+    Vector alignment = update_alignment(*boid);
+    Vector cohesion = update_cohesion(*boid);
+    Vector separation = update_separation(*boid);
+    Vector tendency = tendencyTo(boid->location, cube_location);
+
+    boid->velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT - tendency.x * 20;
+    boid->velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT - tendency.y * 20;
+    boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * 20;
+    boid->velocity = normalize_vec(boid->velocity);
+    boid->velocity = mult_vec_val(boid->velocity, 20);
+    printf("AFTER\n");
+    printf("boid->velocity.x: %f\n", boid->velocity.x);
+    printf("boid->velocity.y: %f\n", boid->velocity.y);
+    printf("boid->velocity.z: %f\n", boid->velocity.z);
 }
 
 Vector update_alignment(Boid boid) {
@@ -409,10 +406,10 @@ Vector update_alignment(Boid boid) {
     vector.z = 0.0;
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
-        if(distance_vec_vec(boid.location, boids[i].location) < NEIGHBOR_RADIUS) {
-            vector.x = vector.x + boids[i].velocity.x;
-            vector.y = vector.y + boids[i].velocity.y;
-            vector.z = vector.z + boids[i].velocity.z;
+        if(distance_vec_vec(boid.location, boids[i]->location) < NEIGHBOR_RADIUS) {
+            vector.x = vector.x + boids[i]->velocity.x;
+            vector.y = vector.y + boids[i]->velocity.y;
+            vector.z = vector.z + boids[i]->velocity.z;
             neighborCount++;
         }
     }
@@ -437,10 +434,10 @@ Vector update_cohesion(Boid boid) {
     vector.z = 0.0;
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
-        if(distance_vec_vec(boid.location, boids[i].location) < NEIGHBOR_RADIUS) {
-             vector.x =  vector.x +boids[i].location.x;
-             vector.y =  vector.y +boids[i].location.y;
-             vector.z =  vector.z +boids[i].location.z;
+        if(distance_vec_vec(boid.location, boids[i]->location) < NEIGHBOR_RADIUS) {
+             vector.x =  vector.x +boids[i]->location.x;
+             vector.y =  vector.y +boids[i]->location.y;
+             vector.z =  vector.z +boids[i]->location.z;
             neighborCount++;
         }
     }
@@ -462,20 +459,21 @@ Vector update_separation(Boid boid) {
     vector.z = 0.0;
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
-        if(distance_vec_vec(boid.location, boids[i].location) < NEIGHBOR_RADIUS) {
-            vector.x = vector.x - (boids[i].location.x - boid.location.x);
-            vector.y = vector.y - (boids[i].location.y - boid.location.y);
-            vector.z = vector.z - (boids[i].location.z - boid.location.z);
-            
+        if(distance_vec_vec(boid.location, boids[i]->location) < 500) {
+            vector.x = vector.x - (boids[i]->location.x - boid.location.x);
+             vector.y = vector.y - (boids[i]->location.y - boid.location.y);
+             vector.z = vector.z - (boids[i]->location.z - boid.location.z);
         }
     }
     if(neighborCount == 0) {
         return vector;
     } else {
         vector = mult_vec_val(vector, -1);
-        //printf("boid.velocity.x: %f\n", vector.x);
-        //printf("boid.velocity.y: %f\n", vector.y);
-        //printf("boid.velocity.z: %f\n", vector.z);
         return vector;
     }
 }
+
+GLfloat randomGenerator(){
+    return (GLfloat)((rand() % 100) / 100.0);
+}
+
