@@ -5,8 +5,7 @@
 #include <GLFW/glfw3.h>
 #endif
 #include "hw3.h"
-void rotateAngle(float angle);
-float calculate_angle(float x1, float y1, float x2, float y2);
+
 GLfloat cube_vertices[][3] = {
     {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
     {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
@@ -145,6 +144,9 @@ int main(int argc, char **argv) {
         }
          */
         draw();
+        if(animeState == RESUME) {
+            update();
+        }
         glfwSwapBuffers(window);
         
         // Poll for and process events
@@ -204,11 +206,15 @@ void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
     case 45:
       delete_boid();
       break;
-    case 's':
-    case 'S':
-      break;
+    case 'p':
+    case 'P':
+animeState = RESUME - animeState;
+            break;
     case 'd':
     case 'D':
+      if(animeState == RESUME) {
+         animeState = PAUSED;
+      }
       break;
     case 'q':
     case 'Q':
@@ -280,19 +286,15 @@ void init_boids() {
 }
 
 void init_boid(int num_boid) {
-    Vector old_loc;
     Vector loc;
     Vector vel;
-    old_loc.x = 0;
-    old_loc.y = 0;
-    old_loc.z = 0;
     loc.x = randomGenerator();
     loc.y = randomGenerator();
     loc.z = randomGenerator();
     vel.x = 20;
     vel.y = 0;
     vel.z = 20;
-    Boid* boid = make_boid(old_loc, loc, vel);
+    Boid* boid = make_boid(loc, vel);
     *(boids + num_boid) = boid;
 }
 
@@ -301,7 +303,7 @@ void add_boid() {
         boids = realloc(boids, 2 * ARR_SIZE);
     }
     init_boid(boids_num);
-    printf("boids_num:%d", boids_num);
+    //printf("boids_num:%d", boids_num);
     boids_num++;
 }
 
@@ -322,7 +324,6 @@ void delete_boid() {
 
 void init_grid_vertices() {
     for(int i = 0; i < grid_vertices_num; i++) {
-        printf("i: %d\n", i);
         grid_vertices[i][0] = GRID_TRANSLATEX + (i % (NUM_GRID_X + 1)) * GRID_SIZE;
         grid_vertices[i][1] = -FLOOR_HEIGHT;
         grid_vertices[i][2] = GRID_TRANSLATEZ + (i / (NUM_GRID_X + 1)) * GRID_SIZE;
@@ -344,14 +345,11 @@ void init_grid_indices() {
 
 void init_grid_color() {
     for(int i = 0; i < grid_vertices_num; i++) {
-        printf("colori: %d", i);
         if(i % 2 != 0) {
-            printf("BLACK\n");
             grid_colors[i][0] = BLACK;
             grid_colors[i][1] = BLACK;
             grid_colors[i][2] = BLACK;
         } else {
-            printf("WHITE\n");
             grid_colors[i][0] = WHITE;
             grid_colors[i][1] = WHITE;
             grid_colors[i][2] = WHITE;
@@ -400,20 +398,16 @@ void draw_boid() {
     glVertexPointer(3, GL_FLOAT, 0, boid_vertices);
     glColorPointer(3, GL_FLOAT, 0, boid_colors);
     for(int i = 0; i < boids_num; i++) {
-        float a = 180.0-calculate_angle(0,-BOID_RADIUS,boids[i]->velocity.x,boids[i]->velocity.z)*180.0f/3.14f;
         glPushMatrix();
         boids[i]->location = add_vec_vec(boids[i]->velocity, boids[i]->location);
         glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
-        rotateAngle(a);
+        glRotatef(boids[i]->angle, 0, 1, 0);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
         //glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, boid_head_indices);
         glPopMatrix();
     }
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
-    for(int i = 0; i < boids_num; i++) {
-        update_velocity(boids[i]);
-    }
 }
 
 void draw_wireframe_boid() {
@@ -423,13 +417,31 @@ void draw_wireframe_boid() {
     for(int i = 0; i < boids_num; i++) {
         glPushMatrix();
         glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
+        glRotatef(boids[i]->angle, 0, 1, 0);
         glDrawElements(GL_LINES, 12, GL_UNSIGNED_BYTE, boid_wireframe_indices);
         glPopMatrix();
     }
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void update_velocity(Boid* boid) {
+void update() {
+    #if DEBUG
+        print_debug_info();
+    #endif
+
+    update_boids();
+}
+
+void update_boids() {
+    if(animeState == RESUME) {
+        for(int i = 0; i < boids_num; i++) {
+            update_boid_velocity(boids[i]);
+            update_boid_angle(boids[i]);
+        }
+    }
+}
+
+void update_boid_velocity(Boid* boid) {
     Vector alignment = update_alignment(*boid);
     Vector cohesion = update_cohesion(*boid);
     Vector separation = update_separation(*boid);
@@ -440,10 +452,16 @@ void update_velocity(Boid* boid) {
     boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity = normalize_vec(boid->velocity);
     boid->velocity = mult_vec_val(boid->velocity, BOID_VEL_FACTOR);
+    /*
     printf("AFTER\n");
     printf("boid->velocity.x: %f\n", boid->velocity.x);
     printf("boid->velocity.y: %f\n", boid->velocity.y);
     printf("boid->velocity.z: %f\n", boid->velocity.z);
+    */
+}
+
+void update_boid_angle(Boid* boid) {
+    boid->angle = 180.0 - calculate_angle(0, -BOID_RADIUS, boid->velocity.x, boid->velocity.z) * 180.0f / M_PI;
 }
 
 Vector update_alignment(Boid boid) {
@@ -515,14 +533,14 @@ Vector update_separation(Boid boid) {
     if(neighborCount == 0) {
         return vector;
     } else {
-        vector = mult_vec_val(vector, -1);
-	vector = normalize_vec(vector);
+        vector = mult_vec_val(vector, -1.0f);
+        vector = normalize_vec(vector);
         return vector;
     }
 }
 
 Vector tendencyTo(Vector place, Vector boid) {
-    Vector vector =  add_vec_vec(place, mult_vec_val(boid, -1));
+    Vector vector =  add_vec_vec(place, mult_vec_val(boid, -1.0f));
     vector = normalize_vec(vector);
     //printf("Test.a.x: %f; y: %f; z: %f\n", vector.x, vector.y, vector.z);
     return vector;
@@ -531,15 +549,22 @@ Vector tendencyTo(Vector place, Vector boid) {
 GLfloat randomGenerator() {
     return (GLfloat)((rand() % 1000));
 }
-float calculate_angle(float x1, float y1, float x2, float y2) {
-    float dot = x1*x2 + y1*y2;      //dot product
-    float det = x1*y2 - y1*x2;      // determinant
-    float angle = atan2(det, dot);  // atan2(y, x) or atan2(sin, cos)
+
+GLfloat calculate_angle(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) {
+    GLfloat dot = x1 * x2 + y1 * y2; //dot product
+    GLfloat det = x1 * y2 - y1 * x2; // determinant
+    GLfloat angle = atan2(det, dot);
     return angle;
 }
 
-void rotateAngle(float angle){
-    glTranslatef(0, 0, 0);
-    glRotatef(angle, 0, 1,0);
-    glTranslatef(0, 0, 0);
+void print_debug_info() {
+    print_boids_info();
+}
+
+void print_boids_info() {
+    for(int i = 0; i < BOIDS_NUM; i++) {
+        printf("%dth Boids Position x: %f, y: %f\n", i, boids[i]->location.x, boids[i]->location.y);
+        printf("%dth Boids Velocity x: %f, y: %f\n", i, boids[i]->velocity.x, boids[i]->velocity.y);
+    }
+    printf("\n");
 }

@@ -7,6 +7,8 @@
 #include "time.h"
 #include "ll.h"
 
+typedef enum {PAUSED, RESUME} State;
+
 #define WIDTH 800
 #define HEIGHT 800
 #define ARR_SIZE 100
@@ -15,7 +17,7 @@
 #define NUM_GRID_X 50
 #define NUM_GRID_Z 50
 #define GRID_SIZE 400
-#define BOIDS_NUM 2
+#define BOIDS_NUM 20
 #define BOID_RADIUS 200
 #define CUBE_SIZE 250
 #define CUBE_VELOCITY 100
@@ -25,8 +27,7 @@
 // TODO(tluan): boids and cube don't go below 0
 
 Boid** boids;
-GLfloat boid_angle;
-GLfloat boid_speed;
+GLint animeState = RESUME;
 GLint grid_vertices_num = (NUM_GRID_X + 1) * (NUM_GRID_Z + 1);
 GLint grid_indices_num = 4 * NUM_GRID_X * NUM_GRID_Z;
 GLint boids_num = BOIDS_NUM;
@@ -58,10 +59,16 @@ void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods);
 void cursor(GLFWwindow* window, double xpos, double ypos);
 void mouse(GLFWwindow* window, int button, int action, int mods);
 void framebuffer_size_callback(GLFWwindow *w, int width, int height);
-void update_velocity();
+void update();
+void update_boids();
+void update_boid_velocity(Boid*);
+void update_boid_angle(Boid*);
 Vector update_alignment(Boid);
 Vector update_cohesion(Boid);
 Vector update_separation(Boid);
 Vector tendencyTo(Vector, Vector);
-float randomGenerator();
+GLfloat randomGenerator();
+GLfloat calculate_angle(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+void print_debug_info();
+void print_boids_info();
 #endif /* hw3_h */

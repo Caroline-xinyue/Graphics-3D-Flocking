@@ -8,12 +8,13 @@
 typedef enum {FALSE, TRUE} bool;
 #define VERTICAL_JUSTIFICATION 1
 #define WEIGHTS_UPPER_BOUND 2
-#define NEIGHBOR_RADIUS 100000
+#define NEIGHBOR_RADIUS 500
+#define SEPERATION_RADIUS 800
 #define ALIGNMENT_WEIGHT 10
 #define COHESION_WEIGHT 10
 #define SEPARATION_WEIGHT 0
-#define TENDENCY_TO_GOAL_WEIGHT 0.1 
-#define BOID_VEL_FACTOR 80
+#define TENDENCY_TO_GOAL_WEIGHT 800
+#define BOID_VEL_FACTOR 5
 
 typedef struct Vector {
   float x;
@@ -22,9 +23,9 @@ typedef struct Vector {
 } Vector;
 
 typedef struct Boid {
-  Vector old_location;
   Vector location;
   Vector velocity;
+  float angle;
 } Boid;
 
 typedef struct Goal {
