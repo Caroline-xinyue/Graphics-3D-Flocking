@@ -16,8 +16,10 @@ typedef enum {PAUSED, RESUME} State;
 #define GRID_TRANSLATEZ -10000
 #define NUM_GRID_X 50
 #define NUM_GRID_Z 50
+#define BOID_INIT_SPEEDX 0
+#define BOID_INIT_SPEEDZ 0
 #define GRID_SIZE 400
-#define BOIDS_NUM 20
+#define BOIDS_NUM 10
 #define BOID_RADIUS 200
 #define CUBE_SIZE 250
 #define CUBE_VELOCITY 100
@@ -62,7 +64,9 @@ void framebuffer_size_callback(GLFWwindow *w, int width, int height);
 void update();
 void update_boids();
 void update_boid_velocity(Boid*);
+void update_boid_location(Boid*);
 void update_boid_angle(Boid*);
+void update_cube_location();
 Vector update_alignment(Boid);
 Vector update_cohesion(Boid);
 Vector update_separation(Boid);
