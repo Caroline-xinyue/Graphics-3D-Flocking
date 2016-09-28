@@ -13,7 +13,7 @@ CC = gcc
 CFLAGS = -g -Wall -I/opt/ports/include
 DEPS = ll.h hw3.h
 OBJ = ll.o hw3.o
-OBJ_DEBUG = hw3_debug.o
+OBJ_DEBUG = ll.o hw3_debug.o
 
 all: hw3 hw3_debug
 ll.o: ll.c $(DEPS)
