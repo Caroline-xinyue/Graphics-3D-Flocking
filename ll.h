@@ -4,17 +4,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "GL/glu.h"
 
 typedef enum {FALSE, TRUE} bool;
 #define VERTICAL_JUSTIFICATION 1
 #define WEIGHTS_UPPER_BOUND 2
-#define NEIGHBOR_RADIUS 20000
-#define SEPERATION_RADIUS 2000
+#define NEIGHBOR_RADIUS 1000
+#define SEPERATION_RADIUS 100
 #define ALIGNMENT_WEIGHT 0.1
 #define COHESION_WEIGHT 0.2
 #define SEPARATION_WEIGHT 0.2
-#define TENDENCY_TO_GOAL_WEIGHT 1
-#define BOID_VEL_FACTOR 10
+#define TENDENCY_TO_GOAL_WEIGHT 10
+#define BOID_VEL_FACTOR 100
 
 typedef struct Vector {
   float x;

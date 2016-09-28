@@ -135,7 +135,9 @@ int main(int argc, char **argv) {
     glClearDepth(1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0, 20000, 0, 0, 0, 0, 0, 0, 1);
+    init_view();
+    //gluLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
+    //gluLookAt(0, 20000, 0, 0, 0, 0, 0, 0, 1);
     //gluLookAt(2000, 2000 , 2000, 0, 0, 0, 0, 0, -1);
     //gluLookAt(2000, 0, 18000, 0, 0, 0, 0, 1, 0);
     /*
@@ -181,6 +183,35 @@ void init() {
   init_grid_color();
   init_grid_indices();
   init_cube_location();
+}
+
+void init_view() {
+    Vector midpoint;
+    Vector centroid;
+    centroid.x = 0;
+    centroid.y = 0;
+    centroid.z = 0;
+    int neighborCount = 0;
+    for(int i = 0; i < boids_num; i++) {
+        centroid = add_vec_vec(centroid, boids[i]->location);
+        neighborCount++;
+    }
+    centroid = mult_vec_val(centroid, 1.0f / neighborCount);
+    printf("boids_num: %d", boids_num);
+    if(boids_num == 0) {
+        midpoint.x = 0;
+        midpoint.y = 0;
+        midpoint.z = 0;
+    } else {
+        midpoint = mult_vec_val(add_vec_vec(centroid, cube_location), 1.0f / 2);
+    }
+    if(viewMode == TRAILING) {
+        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, 1);
+    } else if(viewMode == SIDE) {
+        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, 1);
+    } else {
+        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, -1);
+    }
 }
 
 void reshape(GLFWwindow *w, int width, int height) {
@@ -322,11 +353,13 @@ void delete_boid() {
     boids = realloc(boids, 0.5 * ARR_SIZE);
     }
   */
-  printf("################################");
   printf("delete boids_num:%d\n", boids_num);
-  free(boids[boids_num - 1]);
+  if(boids[boids_num - 1] != NULL) {
+    free(boids[boids_num - 1]);
+  }
   boids[boids_num - 1] = NULL;
   boids_num--;
+    printf("#########boids_num: %d", boids_num);
 }
 
 void init_grid_vertices() {
@@ -437,9 +470,9 @@ void draw_wireframe_boid() {
 }
 
 void update() {
-    
+    #if DEBUG
         print_debug_info();
-    
+    #endif
     update_boids();
 }
 
@@ -597,10 +630,10 @@ void print_debug_info() {
 }
 
 void print_boids_info() {
-    for(int i = 0; i < BOIDS_NUM; i++) {
+    for(int i = 0; i < boids_num; i++) {
         printf("%dth Boids Position x: %f, y: %f\n", i, boids[i]->location.x, boids[i]->location.y);
         printf("%dth Boids Velocity x: %f, y: %f\n", i, boids[i]->velocity.x, boids[i]->velocity.y);
-	printf("%dth Boids Angle angle: %f\n", i, boids[i]->angle);
+        printf("%dth Boids Angle angle: %f\n", i, boids[i]->angle);
     }
     printf("\n");
 }
