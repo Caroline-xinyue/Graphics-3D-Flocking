@@ -9,7 +9,7 @@
 
 #define WIDTH 800
 #define HEIGHT 800
-#define ARR_SIZE 10000
+#define ARR_SIZE 100
 #define GRID_TRANSLATEX -10000
 #define GRID_TRANSLATEZ -10000
 #define NUM_GRID_X 50

@@ -5,7 +5,8 @@
 #include <GLFW/glfw3.h>
 #endif
 #include "hw3.h"
-
+void rotateAngle(float angle);
+float calculate_angle(float x1, float y1, float x2, float y2);
 GLfloat cube_vertices[][3] = {
     {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
     {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
@@ -183,35 +184,40 @@ void reshape(GLFWwindow *w, int width, int height) {
 }
 
 void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
-  switch(key) {
-  case GLFW_KEY_UP:
-    cube_location.z = cube_location.z + CUBE_VELOCITY;
-    break;
-  case GLFW_KEY_DOWN:
-    cube_location.z = cube_location.z - CUBE_VELOCITY;
-    break;
-  case GLFW_KEY_LEFT:
-    cube_location.x = cube_location.x - CUBE_VELOCITY;
-    break;
-  case GLFW_KEY_RIGHT:
-    cube_location.x = cube_location.x + CUBE_VELOCITY;
-    break;
-  case 61:
-    add_boid();
-    break;
-  case 45:
-    delete_boid();
-    break;
-  case 's':
-  case 'S':
-    break;
-  case 'q':
-  case 'Q':
-    glfwSetWindowShouldClose(w, GL_TRUE);
-    clear_boids();
-    break;
-  default:
-    break;
+  if(action == GLFW_RELEASE || action == GLFW_REPEAT) {
+    switch(key) {
+    case GLFW_KEY_UP:
+      cube_location.z = cube_location.z + CUBE_VELOCITY;
+      break;
+    case GLFW_KEY_DOWN:
+      cube_location.z = cube_location.z - CUBE_VELOCITY;
+      break;
+    case GLFW_KEY_LEFT:
+      cube_location.x = cube_location.x - CUBE_VELOCITY; 
+      break;
+    case GLFW_KEY_RIGHT:
+      cube_location.x = cube_location.x + CUBE_VELOCITY;
+      break;
+    case 61:
+      add_boid();
+      break;
+    case 45:
+      delete_boid();
+      break;
+    case 's':
+    case 'S':
+      break;
+    case 'd':
+    case 'D':
+      break;
+    case 'q':
+    case 'Q':
+      glfwSetWindowShouldClose(w, GL_TRUE);
+      clear_boids();
+      break;
+    default:
+      break;
+    }
   }
 }
 
@@ -233,8 +239,8 @@ void init_boid_vertices() {
     GLfloat boid_temp_vertices[][3] = {
         {0, 0, -BOID_RADIUS},
         {0, 0, BOID_RADIUS},
-        {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0},
-        {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, 0}
+        {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, -BOID_RADIUS},
+        {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, -BOID_RADIUS}
     };
     
     for(int i = 0; i < 4; i++) {
@@ -268,7 +274,7 @@ void framebuffer_size_callback(GLFWwindow *w, int width, int height) {
 }
 
 void init_boids() {
-    for(int i = 0; i < boids_num; i++) {
+    for(int i = 0; i < BOIDS_NUM; i++) {
         init_boid(i);
     }
 }
@@ -295,6 +301,7 @@ void add_boid() {
         boids = realloc(boids, 2 * ARR_SIZE);
     }
     init_boid(boids_num);
+    printf("boids_num:%d", boids_num);
     boids_num++;
 }
 
@@ -303,9 +310,11 @@ void delete_boid() {
         printf("No more boids to delete\n");
         return;
     }
+    /*
     if(boids_num <= ARR_SIZE / 2) {
         boids = realloc(boids, 0.5 * ARR_SIZE);
     }
+    */
     free(boids[boids_num - 1]);
     boids[boids_num - 1] = NULL;
     boids_num--;
@@ -391,9 +400,11 @@ void draw_boid() {
     glVertexPointer(3, GL_FLOAT, 0, boid_vertices);
     glColorPointer(3, GL_FLOAT, 0, boid_colors);
     for(int i = 0; i < boids_num; i++) {
+        float a = 180.0-calculate_angle(0,-BOID_RADIUS,boids[i]->velocity.x,boids[i]->velocity.z)*180.0f/3.14f;
         glPushMatrix();
         boids[i]->location = add_vec_vec(boids[i]->velocity, boids[i]->location);
         glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
+        rotateAngle(a);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
         //glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, boid_head_indices);
         glPopMatrix();
@@ -458,6 +469,7 @@ Vector update_alignment(Boid boid) {
         vector.x = vector.x - boid.velocity.x;
         vector.y = vector.y - boid.velocity.y;
         vector.z = vector.z - boid.velocity.z;
+	vector = normalize_vec(vector);
         return vector;
     }
 }
@@ -482,6 +494,7 @@ Vector update_cohesion(Boid boid) {
         vector.x = vector.x / neighborCount - boid.location.x;
         vector.y = vector.y / neighborCount - boid.location.y;
         vector.z = vector.z / neighborCount - boid.location.z;
+	vector = normalize_vec(vector);
         return vector;
     }
 }
@@ -493,7 +506,7 @@ Vector update_separation(Boid boid) {
     vector.z = 0.0;
     int neighborCount = 0;
     for(int i = 0; i < boids_num; i++) {
-        if(distance_vec_vec(boid.location, boids[i]->location) < 2000) {
+        if(distance_vec_vec(boid.location, boids[i]->location) < SEPERATION_RADIUS) {
             vector.x = vector.x - (boids[i]->location.x - boid.location.x);
             vector.y = vector.y - (boids[i]->location.y - boid.location.y);
             vector.z = vector.z - (boids[i]->location.z - boid.location.z);
@@ -503,14 +516,30 @@ Vector update_separation(Boid boid) {
         return vector;
     } else {
         vector = mult_vec_val(vector, -1);
+	vector = normalize_vec(vector);
         return vector;
     }
 }
 
-Vector tendencyTo(Vector place, Vector boid){
-    return add_vec_vec(place, mult_vec_val(boid, -1));
+Vector tendencyTo(Vector place, Vector boid) {
+    Vector vector =  add_vec_vec(place, mult_vec_val(boid, -1));
+    vector = normalize_vec(vector);
+    //printf("Test.a.x: %f; y: %f; z: %f\n", vector.x, vector.y, vector.z);
+    return vector;
 }
 
-GLfloat randomGenerator(){
-    return (GLfloat)((rand() % 100) / 100.0);
+GLfloat randomGenerator() {
+    return (GLfloat)((rand() % 1000));
+}
+float calculate_angle(float x1, float y1, float x2, float y2) {
+    float dot = x1*x2 + y1*y2;      //dot product
+    float det = x1*y2 - y1*x2;      // determinant
+    float angle = atan2(det, dot);  // atan2(y, x) or atan2(sin, cos)
+    return angle;
+}
+
+void rotateAngle(float angle){
+    glTranslatef(0, 0, 0);
+    glRotatef(angle, 0, 1,0);
+    glTranslatef(0, 0, 0);
 }
