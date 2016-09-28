@@ -19,7 +19,7 @@ typedef enum {PAUSED, RESUME} State;
 #define BOID_INIT_SPEEDX 0
 #define BOID_INIT_SPEEDZ 0
 #define GRID_SIZE 400
-#define BOIDS_NUM 10
+#define BOIDS_NUM 20
 #define BOID_RADIUS 200
 #define CUBE_SIZE 250
 #define CUBE_VELOCITY 100

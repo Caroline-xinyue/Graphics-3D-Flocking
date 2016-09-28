@@ -135,7 +135,8 @@ int main(int argc, char **argv) {
     glClearDepth(1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(2000, 2000 , 2000, 0, 0, 0, 0, 0, -1);
+    gluLookAt(0, 20000, 0, 0, 0, 0, 0, 0, 1);
+    //gluLookAt(2000, 2000 , 2000, 0, 0, 0, 0, 0, -1);
     //gluLookAt(2000, 0, 18000, 0, 0, 0, 0, 1, 0);
     /*
       gluLookAt(2000 * sin(angle), 2000, 2000 * cos(angle), 0, 0, 0, 0, 1, 0);
@@ -321,6 +322,7 @@ void delete_boid() {
     boids = realloc(boids, 0.5 * ARR_SIZE);
     }
   */
+  printf("################################");
   printf("delete boids_num:%d\n", boids_num);
   free(boids[boids_num - 1]);
   boids[boids_num - 1] = NULL;
@@ -455,11 +457,25 @@ void update_boid_velocity(Boid* boid) {
     Vector cohesion = update_cohesion(*boid);
     Vector separation = update_separation(*boid);
     Vector tendency = tendencyTo(boid->location, cube_location);
-
+    printf("vy: %f\n",boid->velocity.x);
+    printf("vx: %f\n", boid->velocity.y);
+    printf("vz: %f\n",boid->velocity.z);
     boid->velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT - tendency.x * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT - tendency.y * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity = normalize_vec(boid->velocity);
+    printf("WEIGHT: alignmentx: %f\n", alignment.x * ALIGNMENT_WEIGHT);
+    printf("WEIGHT: cohesionx: %f\n", cohesion.x * COHESION_WEIGHT);
+    printf("seperationx: %f\n", separation.x );
+    printf("WEIGHT: alignmenty: %f\n", alignment.y * ALIGNMENT_WEIGHT);
+    printf("WEIGHT: cohesiony: %f\n", cohesion.y * COHESION_WEIGHT);
+    printf("seperationy: %f\n", separation.y);
+    printf("WEIGHT: alignmentz: %f\n", alignment.z * ALIGNMENT_WEIGHT);
+    printf("WEIGHT: cohesionz: %f\n", cohesion.z * COHESION_WEIGHT);
+    printf("seperationz: %f\n", separation.z );
+    printf("tvy: %f\n",tendency.x);
+    printf("tvx: %f\n", tendency.y);
+    printf("tvz: %f\n",tendency.z);
     boid->velocity = mult_vec_val(boid->velocity, BOID_VEL_FACTOR);
 }
 
@@ -541,13 +557,19 @@ Vector update_separation(Boid boid) {
             vector.x = vector.x - (boids[i]->location.x - boid.location.x);
             vector.y = vector.y - (boids[i]->location.y - boid.location.y);
             vector.z = vector.z - (boids[i]->location.z - boid.location.z);
+	    neighborCount++;
         }
     }
     if(neighborCount == 0) {
-        return vector;
+      return vector;
     } else {
         vector = mult_vec_val(vector, -1.0f);
         vector = normalize_vec(vector);
+	/*
+	printf("separation_x: %f", vector.x);
+	printf("separation_y: %f", vector.y);
+	printf("separation_z: %f", vector.z);
+	*/
         return vector;
     }
 }
