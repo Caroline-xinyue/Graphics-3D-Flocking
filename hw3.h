@@ -6,10 +6,8 @@
 #include <math.h>
 #include "time.h"
 #include "ll.h"
-#include "GL/glu.h"
 
 typedef enum {PAUSED, RESUME} State;
-typedef enum {DEFAULT, TRAILING, SIDE} Mode;
 
 #define WIDTH 800
 #define HEIGHT 800
@@ -21,7 +19,7 @@ typedef enum {DEFAULT, TRAILING, SIDE} Mode;
 #define BOID_INIT_SPEEDX 0
 #define BOID_INIT_SPEEDZ 0
 #define GRID_SIZE 400
-#define BOIDS_NUM 10
+#define BOIDS_NUM 20
 #define BOID_RADIUS 200
 #define CUBE_SIZE 250
 #define CUBE_VELOCITY 100
@@ -31,18 +29,17 @@ typedef enum {DEFAULT, TRAILING, SIDE} Mode;
 // TODO(tluan): boids and cube don't go below 0
 
 Boid** boids;
-State animeState = RESUME;
-Mode viewMode = DEFAULT;
+GLint animeState = RESUME;
 GLint grid_vertices_num = (NUM_GRID_X + 1) * (NUM_GRID_Z + 1);
 GLint grid_indices_num = 4 * NUM_GRID_X * NUM_GRID_Z;
 GLint boids_num = BOIDS_NUM;
 GLfloat boid_vertices[4][3];
+GLfloat boid_indices_shadow[4][3];
 GLuint grid_indices[4 * NUM_GRID_X * NUM_GRID_Z];
 GLfloat grid_colors[(NUM_GRID_X + 1) * (NUM_GRID_Z + 1)][3];
 GLfloat grid_vertices[(NUM_GRID_X + 1) * (NUM_GRID_Z + 1)][3];
 
 void init();
-void init_view();
 void init_boids();
 void init_boid();
 void init_grid_vertices();

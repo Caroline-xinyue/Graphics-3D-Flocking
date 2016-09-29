@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "GL/glu.h"
 
 typedef enum {FALSE, TRUE} bool;
 #define VERTICAL_JUSTIFICATION 1
@@ -13,7 +12,7 @@ typedef enum {FALSE, TRUE} bool;
 #define SEPERATION_RADIUS 100
 #define ALIGNMENT_WEIGHT 0.1
 #define COHESION_WEIGHT 0.2
-#define SEPARATION_WEIGHT 0.2
+#define SEPARATION_WEIGHT 0.20
 #define TENDENCY_TO_GOAL_WEIGHT 10
 #define BOID_VEL_FACTOR 100
 

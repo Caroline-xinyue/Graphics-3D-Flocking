@@ -1,9 +1,3 @@
-#ifdef __APPLE__
-#include <GLFW/glfw3.h>
-#include <GL/glu.h>
-#else
-#include <GLFW/glfw3.h>
-#endif
 #include "ll.h"
 
 Vector normalize_vec(Vector vector) {

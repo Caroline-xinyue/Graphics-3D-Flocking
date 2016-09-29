@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #endif
 #include "hw3.h"
-
+void update_cube();
 GLfloat cube_vertices[][3] = {
   {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
   {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, CUBE_SIZE / 2.0},
@@ -16,14 +16,15 @@ GLfloat cube_vertices[][3] = {
   {CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0},
   {-CUBE_SIZE / 2.0, CUBE_SIZE / 2.0, -CUBE_SIZE / 2.0}
 };
-
+GLfloat wingsHeight = BOID_RADIUS / 2.0;
+void randomCubeVelocity();
 GLubyte cube_indices[24] = {
   0, 3, 2, 1,
   1, 2, 5, 6,
   0, 1, 6, 7,
   0, 7, 4, 3,
   7, 6, 5, 4,
-    3, 4, 5, 2
+  3, 4, 5, 2
 };
 
 GLubyte cube_wireframe_indices[48] = {
@@ -52,7 +53,7 @@ GLubyte cube_wireframe_indices[48] = {
   2, 3,
   3, 4
 };
-
+int autoMode = 0;
 GLfloat cube_colors[][3] = {
   {1.0, 1.0, 1.0},
   {0.0, 1.0, 0.0},
@@ -69,6 +70,7 @@ GLubyte boid_indices[6] = {
   1, 0, 3
 };
 
+
 GLubyte boid_wireframe_indices[12] = {
   0, 1,
   1, 2,
@@ -83,6 +85,13 @@ GLfloat boid_colors[][3] = {
   {1.0, 1.0, 0.0},
   {0.0, 1.0, 1.0},
   {0.0, 0.0, 1.0}
+};
+
+GLfloat boid_colors_shadow[][3] = {
+    {0.5,0.4,0.5},
+    {0.5,0.4,0.5},
+    {0.5,0.4,0.5},
+    {0.5,0.4,0.5}
 };
 
 Vector cube_location; // move cube with keyboard
@@ -135,9 +144,7 @@ int main(int argc, char **argv) {
     glClearDepth(1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    init_view();
-    //gluLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
-    //gluLookAt(0, 20000, 0, 0, 0, 0, 0, 0, 1);
+    gluLookAt(20000, 20000, 20000, 0, 0, 0, 0, 0, 1);
     //gluLookAt(2000, 2000 , 2000, 0, 0, 0, 0, 0, -1);
     //gluLookAt(2000, 0, 18000, 0, 0, 0, 0, 1, 0);
     /*
@@ -185,35 +192,6 @@ void init() {
   init_cube_location();
 }
 
-void init_view() {
-    Vector midpoint;
-    Vector centroid;
-    centroid.x = 0;
-    centroid.y = 0;
-    centroid.z = 0;
-    int neighborCount = 0;
-    for(int i = 0; i < boids_num; i++) {
-        centroid = add_vec_vec(centroid, boids[i]->location);
-        neighborCount++;
-    }
-    centroid = mult_vec_val(centroid, 1.0f / neighborCount);
-    printf("boids_num: %d", boids_num);
-    if(boids_num == 0) {
-        midpoint.x = 0;
-        midpoint.y = 0;
-        midpoint.z = 0;
-    } else {
-        midpoint = mult_vec_val(add_vec_vec(centroid, cube_location), 1.0f / 2);
-    }
-    if(viewMode == TRAILING) {
-        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, 1);
-    } else if(viewMode == SIDE) {
-        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, 1);
-    } else {
-        gluLookAt(0, 18000, 0, midpoint.x, midpoint.y, midpoint.z, 0, 0, -1);
-    }
-}
-
 void reshape(GLFWwindow *w, int width, int height) {
   resize();
 }
@@ -221,6 +199,8 @@ void reshape(GLFWwindow *w, int width, int height) {
 void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
   if(action == GLFW_RELEASE || action == GLFW_REPEAT) {
     switch(key) {
+        if(autoMode == 0){
+            
     case GLFW_KEY_UP:
       cube_location.z = cube_location.z + CUBE_VELOCITY;
       break;
@@ -232,7 +212,7 @@ void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
       break;
     case GLFW_KEY_RIGHT:
       cube_location.x = cube_location.x + CUBE_VELOCITY;
-      break;
+           break;}
     case 61:
       add_boid();
       break;
@@ -257,6 +237,12 @@ void keyboard(GLFWwindow *w, int key, int scancode, int action, int mods) {
       glfwSetWindowShouldClose(w, GL_TRUE);
       clear_boids();
       break;
+    case 'M':
+    case 'm':
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            randomCubeVelocity();
+            autoMode = 1;
+            break;
     default:
       break;
     }
@@ -278,16 +264,24 @@ void init_boid_vertices() {
     {-1 - sqrt(3) * BOID_RADIUS / 2.0, 1 + BOID_RADIUS / 2.0, 0}
     };
   */
+    
   GLfloat boid_temp_vertices[][3] = {
     {0, 0, -BOID_RADIUS},
     {0, 0, BOID_RADIUS},
-    {sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, BOID_RADIUS},
-    {-sqrt(3) * BOID_RADIUS / 2.0, BOID_RADIUS / 2.0, BOID_RADIUS}
+    {sqrt(3) * BOID_RADIUS / 2.0, wingsHeight / 2.0, BOID_RADIUS},
+    {-sqrt(3) * BOID_RADIUS / 2.0, wingsHeight  / 2.0, BOID_RADIUS}
   };
+    GLfloat boid_Shadow_temp_vertices[][3] = {
+        {0, 0, -BOID_RADIUS},
+        {0, 0, BOID_RADIUS},
+        {sqrt(3) * BOID_RADIUS / 2.0, 0, BOID_RADIUS},
+        {-sqrt(3) * BOID_RADIUS / 2.0, 0, BOID_RADIUS}
+    };
   
   for(int i = 0; i < 4; i++) {
     for(int j = 0; j < 3; j++) {
       boid_vertices[i][j] = boid_temp_vertices[i][j];
+        boid_indices_shadow[i][j]=boid_Shadow_temp_vertices[i][j];
     }
   }
 }
@@ -324,9 +318,9 @@ void init_boids() {
 void init_boid(int num_boid) {
   Vector loc;
   Vector vel;
-  loc.x = randomGenerator();
-  loc.y = randomGenerator();
-  loc.z = randomGenerator();
+  loc.x = 2000+randomGenerator();
+  loc.y = 20+randomGenerator();
+  loc.z = 2000+randomGenerator();
   vel.x = BOID_INIT_SPEEDX;
   vel.y = 0;
   vel.z = BOID_INIT_SPEEDZ;
@@ -353,13 +347,11 @@ void delete_boid() {
     boids = realloc(boids, 0.5 * ARR_SIZE);
     }
   */
+  printf("################################");
   printf("delete boids_num:%d\n", boids_num);
-  if(boids[boids_num - 1] != NULL) {
-    free(boids[boids_num - 1]);
-  }
+  free(boids[boids_num - 1]);
   boids[boids_num - 1] = NULL;
   boids_num--;
-    printf("#########boids_num: %d", boids_num);
 }
 
 void init_grid_vertices() {
@@ -404,9 +396,16 @@ void init_cube_location(){
 }
 
 void init_cube_velocity() {
-  cube_velocity.x = 0;
+  cube_velocity.x = randomGenerator()/100000.0f;
   cube_velocity.y = 0;
-  cube_velocity.z = 0;
+  cube_velocity.z = randomGenerator()/100000.0f;
+    //cube_velocity = normalize_vec(cube_velocity);
+     printf("%f",cube_velocity.z);
+}
+void randomCubeVelocity(){
+    cube_velocity.x = randomGenerator()/10.0f;
+    cube_velocity.y = 0;
+    cube_velocity.z = randomGenerator()/10.0f;
 }
 
 void draw_floor() {
@@ -445,12 +444,33 @@ void draw_boid() {
     glColorPointer(3, GL_FLOAT, 0, boid_colors);
     for(int i = 0; i < boids_num; i++) {
         glPushMatrix();
-        glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
+        glTranslatef(boids[i]->location.x, 2000+boids[i]->location.y, boids[i]->location.z);
         glRotatef(boids[i]->angle, 0, 1, 0);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
+        
         //glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, boid_head_indices);
         glPopMatrix();
+        
     }
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, boid_indices_shadow);
+    glColorPointer(3, GL_FLOAT, 0, boid_colors_shadow);
+     for(int i = 0; i < boids_num; i++) {
+         glPushMatrix();
+         glTranslatef(boids[i]->location.x, -500, boids[i]->location.z);
+         glRotatef(boids[i]->angle, 0, 1, 0);
+         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, boid_indices);
+         
+         //glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, boid_head_indices);
+         glPopMatrix();
+     }
+    
+         
+         
+         
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 }
@@ -461,7 +481,8 @@ void draw_wireframe_boid() {
     glColor3f(1.0, 1.0, 1.0);
     for(int i = 0; i < boids_num; i++) {
         glPushMatrix();
-        glTranslatef(boids[i]->location.x, boids[i]->location.y, boids[i]->location.z);
+        
+        glTranslatef(boids[i]->location.x, 2000+boids[i]->location.y, boids[i]->location.z);
         glRotatef(boids[i]->angle, 0, 1, 0);
         glDrawElements(GL_LINES, 12, GL_UNSIGNED_BYTE, boid_wireframe_indices);
         glPopMatrix();
@@ -470,12 +491,21 @@ void draw_wireframe_boid() {
 }
 
 void update() {
-    #if DEBUG
-        print_debug_info();
-    #endif
+    
+   // print_debug_info();
+    update_cube();
     update_boids();
 }
 
+void update_cube() {
+    if(cube_location.x>8000||cube_location.x<-8000){
+        cube_velocity.x = -cube_velocity.x;}
+    if(cube_location.z>8000||cube_location.z<-8000){
+        cube_velocity.z = -cube_velocity.z;}
+    cube_location = add_vec_vec(cube_location, cube_velocity);
+}
+
+    
 void update_boids() {
   printf("animeState: %d\n", animeState);
   for(int i = 0; i < boids_num; i++) {
@@ -486,6 +516,7 @@ void update_boids() {
 }
 
 void update_boid_velocity(Boid* boid) {
+    
     Vector alignment = update_alignment(*boid);
     Vector cohesion = update_cohesion(*boid);
     Vector separation = update_separation(*boid);
@@ -495,7 +526,7 @@ void update_boid_velocity(Boid* boid) {
     printf("vz: %f\n",boid->velocity.z);
     boid->velocity.x += alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + separation.x * SEPARATION_WEIGHT - tendency.x * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity.y += alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT + separation.y * SEPARATION_WEIGHT - tendency.y * TENDENCY_TO_GOAL_WEIGHT;
-    boid->velocity.z += alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * TENDENCY_TO_GOAL_WEIGHT;
+    boid->velocity.z +=                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       alignment.z * ALIGNMENT_WEIGHT + cohesion.z * COHESION_WEIGHT + separation.z * SEPARATION_WEIGHT - tendency.z * TENDENCY_TO_GOAL_WEIGHT;
     boid->velocity = normalize_vec(boid->velocity);
     printf("WEIGHT: alignmentx: %f\n", alignment.x * ALIGNMENT_WEIGHT);
     printf("WEIGHT: cohesionx: %f\n", cohesion.x * COHESION_WEIGHT);
@@ -630,10 +661,10 @@ void print_debug_info() {
 }
 
 void print_boids_info() {
-    for(int i = 0; i < boids_num; i++) {
+    for(int i = 0; i < BOIDS_NUM; i++) {
         printf("%dth Boids Position x: %f, y: %f\n", i, boids[i]->location.x, boids[i]->location.y);
         printf("%dth Boids Velocity x: %f, y: %f\n", i, boids[i]->velocity.x, boids[i]->velocity.y);
-        printf("%dth Boids Angle angle: %f\n", i, boids[i]->angle);
+	printf("%dth Boids Angle angle: %f\n", i, boids[i]->angle);
     }
     printf("\n");
 }
