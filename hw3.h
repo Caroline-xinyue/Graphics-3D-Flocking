@@ -6,14 +6,17 @@
 #include <math.h>
 #include "time.h"
 #include "ll.h"
+#include "GL/glu.h"
 
 typedef enum {PAUSED, RESUME} State;
+typedef enum {DEFAULT, TRAILING, SIDE} Mode;
 
 #define WIDTH 800
 #define HEIGHT 800
 #define ARR_SIZE 100
 #define GRID_TRANSLATEX -10000
 #define GRID_TRANSLATEZ -10000
+#define CUBE_BOUNDARY 8000
 #define NUM_GRID_X 50
 #define NUM_GRID_Z 50
 #define BOID_INIT_SPEEDX 0
@@ -29,17 +32,21 @@ typedef enum {PAUSED, RESUME} State;
 // TODO(tluan): boids and cube don't go below 0
 
 Boid** boids;
-GLint animeState = RESUME;
+State animeState = RESUME;
+Mode viewMode = DEFAULT;
+bool autoMode = FALSE;
 GLint grid_vertices_num = (NUM_GRID_X + 1) * (NUM_GRID_Z + 1);
 GLint grid_indices_num = 4 * NUM_GRID_X * NUM_GRID_Z;
 GLint boids_num = BOIDS_NUM;
 GLfloat boid_vertices[4][3];
-GLfloat boid_indices_shadow[4][3];
 GLuint grid_indices[4 * NUM_GRID_X * NUM_GRID_Z];
 GLfloat grid_colors[(NUM_GRID_X + 1) * (NUM_GRID_Z + 1)][3];
 GLfloat grid_vertices[(NUM_GRID_X + 1) * (NUM_GRID_Z + 1)][3];
+Vector cube_location; // move cube with keyboard
+Vector cube_velocity;
 
 void init();
+void init_view();
 void init_boids();
 void init_boid();
 void init_grid_vertices();
@@ -67,12 +74,14 @@ void update_boids();
 void update_boid_velocity(Boid*);
 void update_boid_location(Boid*);
 void update_boid_angle(Boid*);
+void update_cube();
 void update_cube_location();
 Vector update_alignment(Boid);
 Vector update_cohesion(Boid);
 Vector update_separation(Boid);
 Vector tendencyTo(Vector, Vector);
 GLfloat randomGenerator();
+void randomCubeVelocity();
 GLfloat calculate_angle(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 void print_debug_info();
 void print_boids_info();
