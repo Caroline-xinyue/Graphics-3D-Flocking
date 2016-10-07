@@ -6,21 +6,10 @@
 #include <math.h>
 #include "GL/glu.h"
 
-typedef enum {FALSE, TRUE} bool;
-#define VERTICAL_JUSTIFICATION 1
-#define WEIGHTS_UPPER_BOUND 2
-#define NEIGHBOR_RADIUS 1000
-#define SEPERATION_RADIUS 100
-#define ALIGNMENT_WEIGHT 0.1
-#define COHESION_WEIGHT 0.2
-#define SEPARATION_WEIGHT 0.2
-#define TENDENCY_TO_GOAL_WEIGHT 10
-#define BOID_VEL_FACTOR 100
-
 typedef struct Vector {
-  float x;
-  float y;
-  float z;
+  GLfloat x;
+  GLfloat y;
+  GLfloat z;
 } Vector;
 
 typedef struct Boid {
@@ -29,15 +18,11 @@ typedef struct Boid {
   float angle;
 } Boid;
 
-typedef struct Goal {
-  Vector location;
-  Vector velocity;
-} Goal;
-
 Boid* make_boid();
 Vector add_vec_vec(Vector, Vector);
-Vector mult_vec_val(Vector, float);
+Vector mult_vec_val(Vector, GLfloat);
 Vector normalize_vec(Vector);
+Vector cross_vec_vec(Vector vec1, Vector vec2);
 float distance_vec_vec(Vector, Vector);
 
 #endif /* ll_h */

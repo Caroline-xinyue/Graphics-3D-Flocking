@@ -17,15 +17,6 @@ Vector normalize_vec(Vector vector) {
         normalized_vector.y = vector.y / length;
         normalized_vector.z = vector.z / length;
     }
-    /*
-    printf("vector.x: %f\n", vector.x);
-    printf("vector.y: %f\n", vector.y);
-    printf("vector.z: %f\n", vector.z);
-    printf("length: %f\n", length);
-    printf("normalized_vector_x: %f\n", normalized_vector.x);
-    printf("normalized_vector_y: %f\n", normalized_vector.y);
-    printf("normalized_vector_z: %f\n", normalized_vector.z);
-    */
     return normalized_vector;
 }
 
@@ -38,6 +29,7 @@ Boid* make_boid(Vector loc, Vector vel) {
         new -> velocity.x = vel.x;
         new -> velocity.y = vel.y;
         new -> velocity.z = vel.z;
+        new -> angle = 0.0f;
     }
     else {
         printf("Out of memory!\n");
@@ -59,6 +51,14 @@ Vector mult_vec_val(Vector vec, float val) {
     vector.x = vec.x * val;
     vector.y = vec.y * val;
     vector.z = vec.z * val;
+    return vector;
+}
+
+Vector cross_vec_vec(Vector vec1, Vector vec2) {
+    Vector vector;
+    vector.x = vec1.y * vec2.z - vec1.z * vec2.y;
+    vector.y = vec1.z * vec2.x - vec1.x * vec2.z;
+    vector.z = vec1.x * vec2.y - vec1.y * vec2.x;
     return vector;
 }
 
